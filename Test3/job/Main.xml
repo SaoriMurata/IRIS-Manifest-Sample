@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2022.1 (Build 209U)" ts="2024-09-19 17:18:30">
+<Class name="Test3.job.Main">
+<Super>Ens.Production</Super>
+<TimeChanged>67102,62253.6120228</TimeChanged>
+<TimeCreated>67102,61642.5942989</TimeCreated>
+
+<Method name="OnStart">
+<Description>
+ 処理概要   ：プロダクション開始前処理</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[    Return $$$OK ##; エラーでもプロダクションは開始する。
+]]></Implementation>
+</Method>
+
+<XData name="ProductionDefinition">
+<Data><![CDATA[
+<Production Name="job.Main" TestingEnabled="true" LogGeneralTraceEvents="false">
+  <Description>メインプロダクション</Description>
+  <ActorPoolSize>3</ActorPoolSize>
+  <Setting Target="Adapter" Name="AlertNotificationManager">Ens.Alerting.NotificationManager</Setting>
+  <Setting Target="Adapter" Name="AlertNotificationOperation">EnsLib.EMail.AlertOperation</Setting>
+  <Setting Target="Adapter" Name="AlertActionWindow">60</Setting>
+  <Setting Target="Adapter" Name="ShutdownTimeout">90</Setting>
+  <Item Name="TestTask" Category="" ClassName="Test3.TestTask" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>  
+</Production>
+]]></Data>
+</XData>
+</Class>
+</Export>

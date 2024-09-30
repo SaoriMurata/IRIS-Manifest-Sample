@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26">
+<Class name="MyApp.MyInstaller">
+<Description>
+%Installer Manifest MyApp.MyInstaller</Description>
+<IncludeCode>%occInclude</IncludeCode>
+<TimeCreated>67100,40150.6953779</TimeCreated>
+
+<XData name="MyManifest">
+<XMLNamespace>INSTALLER</XMLNamespace>
+<Data><![CDATA[
+<Manifest>
+<!-- 変数の初回定義 -->
+<Default Name="Namespace" Value="TESTNMSP"/>
+<Default Name="DATADB" Value="${Namespace}-GBL"/>
+<Default Name="CODEDB" Value="${Namespace}-RTN"/>
+<Default Name="Namespace2" Value="${Namespace}2"/>
+<Default Name="DATADB2" Value="${Namespace2}-GBL"/>
+<Default Name="CODEDB2" Value="${Namespace2}-RTN"/>
+<Default Name="Namespace3" Value="ENSNMSP"/>
+<Default Name="DATADB3" Value="${Namespace3}-GBL"/>
+<Default Name="CODEDB3" Value="${Namespace3}-RTN"/>
+<Default Name="TestUserPw" Value="12345"/>
+<Default Name="SetupDir" Value="C:\work\git"/>
+
+<!-- ネームスペース作成 -->
+<Namespace Name="${Namespace}" Code="${CODEDB}" Data="${DATADB}" Create="yes" Ensemble="0">
+<!-- DB作成 -->
+<Configuration>
+<Database Name="${DATADB}" Dir="C:\IRISDB\${Namespace}\GBL" Create="yes" InitialSize="100" Resource="%DB_${DATADB}" PublicPermissions="R"/>
+<Database Name="${CODEDB}" Dir="C:\IRISDB\${Namespace}\RTN" Create="yes" InitialSize="10" Resource="%DB_${CODEDB}" PublicPermissions="R"/>
+</Configuration>
+<!-- グローバル、クラス、ルーチンインポート -->
+<Import File="${SetupDir}\Test1" Flags="ck" Recurse="1" IgnoreErrors="1"/>
+<Import File="${SetupDir}\Test2" Flags="ck" Recurse="1" IgnoreErrors="1"/>
+</Namespace>
+
+<!-- ネームスペース2つ目（マッピング用）作成 -->
+<Namespace Name="${Namespace2}" Code="${CODEDB2}" Data="${DATADB2}" Create="yes" Ensemble="0">
+<Configuration>
+<!-- DB作成 -->
+<Database Name="${DATADB2}" Dir="C:\IRISDB\${Namespace2}\GBL" Create="yes" InitialSize="100" Resource="%DB_${DATADB2}" PublicPermissions="R"/>
+<Database Name="${CODEDB2}" Dir="C:\IRISDB\${Namespace2}\RTN" Create="yes" InitialSize="10" Resource="%DB_${CODEDB2}" PublicPermissions="R"/>
+<!-- グローバル、クラス、ルーチンマッピング設定 -->
+<GlobalMapping Global="test2" From="${DATADB}"/>
+<ClassMapping Package="Test2" From="${CODEDB}"/>
+</Configuration>
+</Namespace>
+
+<!-- ネームスペース3つ目（InterOperability対応版用）作成 -->
+<Namespace Name="${Namespace3}" Code="${CODEDB3}" Data="${DATADB3}" Create="yes" Ensemble="1">
+<Configuration>
+<!-- DB作成 -->
+<Database Name="${DATADB3}" Dir="C:\IRISDB\${Namespace3}\GBL" Create="yes" InitialSize="100" Resource="%DB_${DATADB3}" PublicPermissions="R"/>
+<Database Name="${CODEDB3}" Dir="C:\IRISDB\${Namespace3}\RTN" Create="yes" InitialSize="10" Resource="%DB_${CODEDB3}" PublicPermissions="R"/>
+</Configuration>
+
+<!-- グローバル、クラス、ルーチンインポート -->
+<Import File="${SetupDir}\Test3" Flags="ck" Recurse="1" IgnoreErrors="1"/>
+
+<!-- プロダクションの作成 -->
+<Production Name="Test3.job.Main" AutoStart="1" />
+</Namespace>
+
+
+<!-- ロール作成・変更 -->
+<Role
+Name="TestOperator"
+Description="テスト運用者ロール"
+Resources="%DB_TESTNMSP-GBL:RW,%DB_TESTNMSP-RTN:RW"
+ RolesGranted="%Developer"/>
+<Role
+Name="TestAdministrator"
+Description="テスト管理者ロール"
+ RolesGranted="%All"/>
+
+<!-- ユーザ作成・変更 -->
+<User
+Username="TestUser1"
+PasswordVar="TestUserPw"
+Fullname="テストユーザ1"
+Roles="TestOperator"
+Namespace="USER"
+Enabled="1"
+ Comment="テストユーザ1"/>
+<User
+Username="TestUser2"
+PasswordVar="TestUserPw"
+Fullname="テストユーザ2"
+Roles="TestAdministrator"
+Namespace="USER"
+Enabled="1"
+ Comment="テストユーザ2"/>
+ 
+<Namespace Name="%SYS" Create="overwrite">
+<!-- セキュリティ設定のインポート -->
+<Invoke Class="Security.System" Method="ImportAll" CheckStatus="false">
+<Arg Value="${SetupDir}\SecurityExport.xml"/>
+</Invoke>
+</Namespace>
+
+</Manifest>
+]]></Data>
+</XData>
+
+<Method name="setup">
+<Description><![CDATA[
+<h2>マニフェスト生成・実行処理</h2>
+<p><pre>SAMPLES>
+Do ##class(MyApp.MyInstaller).setup()
+</p></pre>]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<CodeMode>objectgenerator</CodeMode>
+<FormalSpec><![CDATA[&pVars,pLogLevel:%Integer=3,pInstaller:%Installer.Installer,pLogger:%Installer.AbstractLogger]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ #; XGL ドキュメントでこのメソッドのコードを生成する.
+ Quit ##class(%Installer.Manifest).%Generate(%compiledclass, %code, "MyManifest")
+]]></Implementation>
+</Method>
+
+<Method name="setupExecute">
+<Description><![CDATA[
+<h2>セットアップ開始処理</h2>
+<p>return %Status</p>
+<p><pre>SAMPLES>
+Do ##class(MyApp.MyInstaller).setupExecute()
+</p></pre>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pVars:%SYS.Python=""</FormalSpec>
+<Language>python</Language>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	import iris
+	tSC = 0
+	# すでにネームスペースがあるときはManifestの処理はスキップ
+	if not iris.cls('%SYS.Namespace').Exists('TESTNMSP') == 1:
+		tSC = iris.cls(__name__).setup(pVars)
+
+	# 日本語ロケールへ変更
+	iris.cls('Config.NLS.Locales').Install('jpuw')
+	# 不要なタスクを停止
+	iris.cls(__name__).SuspendTask()
+
+	return tSC
+]]></Implementation>
+</Method>
+
+<Method name="SuspendTask">
+<Description><![CDATA[
+<h2>タスク停止</h2>
+<p>不要なタスクスケジュールを停止する。</p>
+<p><pre>SAMPLES>
+Do ##class(MyApp.MyInstaller).SuspendTask()
+</p></pre>]]></Description>
+<ClassMethod>1</ClassMethod>
+<Language>python</Language>
+<Implementation><![CDATA[
+	import iris
+	
+	targetId = -1
+	df = iris.sql.exec('SELECT %ID,Name FROM %SYS.Task').dataframe()
+	for i in range(len(df)):
+		if df.iloc[i, 1] == "機能トラッカー":
+			targetId = df.iloc[i, 0]
+			break
+
+	if not targetId == -1:
+    	# 機能トラッカーを一時停止
+		iris.cls('%SYS.TaskSuper').Suspend(int(targetId))
+]]></Implementation>
+</Method>
+</Class>
+</Export>
